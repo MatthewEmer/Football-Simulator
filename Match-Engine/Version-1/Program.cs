@@ -3,46 +3,50 @@
 const int HALF_LENGTH = 45;
 const int NUMBER_OF_HALVES = 2;
 
+int homeTeamAbility = 75;
+int awayTeamAbility = 75;
 
-static int[] SimulateMatch(Random rng, int HALF_LENGTH, int NUMBER_OF_HALVES)
+
+static int[] SimulateMatch(Random rng, int HALF_LENGTH, int NUMBER_OF_HALVES, int homeTeamAbility, int awayTeamAbility)
 {
     string[] startTexts = {"Kick Off", "Second Half Kick Off"};
     string[] endTexts = {"Half-Time", "Full-Time"};
-
     int[] score = {0,0};
-    double ballPosition = 50;
-    int addedTime = 0;
 
-    for (int half = 1; half <= NUMBER_OF_HALVES; half++)
+    for (int halfNumber = 0; halfNumber < NUMBER_OF_HALVES; halfNumber++)
     {
-        Console.WriteLine(startTexts[half - 1]);
-        addedTime = 0;
-
-        for (int minute = 1; minute <= HALF_LENGTH; minute++)
-        {
-            SimulateMinute(rng, ref score, ref ballPosition, minute + ((half - 1) * HALF_LENGTH) + addedTime);
-            
-            if (minute == 45 & addedTime == 0)
-            {
-                addedTime = GetAddedTime(rng, score);
-                minute -= addedTime;
-            }
-        }
-        Console.WriteLine(endTexts[half - 1]);
+        Console.WriteLine(startTexts[halfNumber]);
+        SimulateHalf(rng, HALF_LENGTH, ref score, halfNumber, homeTeamAbility, awayTeamAbility);
+        Console.WriteLine(endTexts[halfNumber]);
     }
 
     return score;
 }
 
 
-static void SimulateMinute(Random rng, ref int[] score, ref double ballPosition, int minute)
+static void SimulateHalf(Random rng, int HALF_LENGTH, ref int[] score, int halfNumber, int homeTeamAbility, int awayTeamAbility)
 {
-    double direction = Math.Pow(-1, rng.Next(1,3));
-    double movement = rng.NextDouble() * 10;
+    double ballPosition = 50;
+    int addedTime = 0;
 
-    ballPosition +=  direction * movement;
+    for (int minute = 1; minute <= HALF_LENGTH; minute++)
+    {
+        int currentMinute = minute + (halfNumber * HALF_LENGTH) + addedTime;
+        SimulateMinute(rng, ref score, ref ballPosition, currentMinute, homeTeamAbility, awayTeamAbility);
+        
+        if (minute == 45 & addedTime == 0)
+        {
+            addedTime = GetAddedTime(rng, score);     
+            Console.WriteLine($"- {addedTime}' Added ({score[0]} - {score[1]})."); 
+            minute -= addedTime;
+        }
+    }
+}
 
-    //Console.WriteLine($"{ballPosition}, {direction}, {movement}");
+
+static void SimulateMinute(Random rng, ref int[] score, ref double ballPosition, int minute, int homeTeamAbility, int awayTeamAbility)
+{
+    ballPosition += SimulateBallMovement(rng, homeTeamAbility, awayTeamAbility);
 
     if (ballPosition > 100)
     {
@@ -57,14 +61,44 @@ static void SimulateMinute(Random rng, ref int[] score, ref double ballPosition,
 }
 
 
+static double SimulateBallMovement(Random rng, int homeTeamAbility, int awayTeamAbility)
+{
+    double direction = rng.Next(1, homeTeamAbility + awayTeamAbility);
+    double distance = rng.NextDouble() * 19;
+
+    if (direction > homeTeamAbility) 
+    { 
+        distance *= -1; 
+    }
+
+    return distance;
+}
+
+
 static int GetAddedTime(Random rng, int[] score)
 {
     int addedTime = rng.Next(1, 3 + score[0] + score[1]);
-    Console.WriteLine($"- {addedTime}' Added ({score[0]} - {score[1]})."); 
+
     return addedTime;
 }
 
 
-int[] score = SimulateMatch(rng, HALF_LENGTH, NUMBER_OF_HALVES);
+int totalGoals = 0;
+int maxGoals = 0;
+int[] maxScore = {0,0};
+int nillNills = 0;
 
-Console.WriteLine($"\nHome {score[0]} - {score[1]} Away");
+int numberOfMatches = 10_000;
+
+for (int i = 0; i < numberOfMatches; i++)
+{
+    int[] score = SimulateMatch(rng, HALF_LENGTH, NUMBER_OF_HALVES, homeTeamAbility, awayTeamAbility);
+    Console.WriteLine($"\nHome {score[0]} - {score[1]} Away");
+    
+    int scoreTotal = score[0] + score[1];
+    if (scoreTotal == 0) { nillNills++; }
+    else if (scoreTotal > maxGoals) { maxGoals = scoreTotal; maxScore = score; }
+    totalGoals += scoreTotal;
+}
+Console.WriteLine($"\n\n{totalGoals} goals from {numberOfMatches} matches ({Math.Round(totalGoals / (double)numberOfMatches, 2)} gp90).");
+Console.WriteLine($"{nillNills} 0-0s ({Math.Round(nillNills / (double)numberOfMatches, 2)}%), ({maxScore[0]} - {maxScore[1]}) was the highest scoring game.");
