@@ -1,31 +1,36 @@
-﻿Random rng = new Random();
+﻿using System;
+using System.Threading;
+
+Random rng = new Random();
 
 const int HALF_LENGTH = 45;
 const int NUMBER_OF_HALVES = 2;
 
-double homeTeamAbility = 100;
-double awayTeamAbility = 100;
 
-
-static int[] SimulateMatch(Random rng, int HALF_LENGTH, int NUMBER_OF_HALVES, double homeTeamAbility, double awayTeamAbility)
+static void SimulateMatch(Random rng, int HALF_LENGTH, int NUMBER_OF_HALVES, string homeTeam, double homeTeamAbility, string awayTeam, double awayTeamAbility)
 {
     int[] score = {0,0};
 
-    string[] startTexts = {"Kick Off", "Second Half Kick Off"};
-    string[] endTexts = {$"Half-Time", $"Full-Time"};
-
+    Console.WriteLine($"| K/O  | {homeTeam} vs. {awayTeam}");
     for (int halfNumber = 0; halfNumber < NUMBER_OF_HALVES; halfNumber++)
     {
-        Console.WriteLine(startTexts[halfNumber]);
-        SimulateHalf(rng, HALF_LENGTH, ref score, halfNumber, homeTeamAbility, awayTeamAbility);
-        Console.WriteLine($"{endTexts[halfNumber]} ({score[0]} - {score[1]}).");
-    }
+        SimulateHalf(rng, HALF_LENGTH, ref score, halfNumber, homeTeam, homeTeamAbility, awayTeam, awayTeamAbility);
+        
+        if (halfNumber == 0)
+        {
+            Console.WriteLine($"| H/T  | {homeTeam} {score[0]}-{score[1]} {awayTeam}");
+        }
+        else
+        {
+            Console.WriteLine($"| F/T  | {homeTeam} {score[0]}-{score[1]} {awayTeam}");
+        }
 
-    return score;
+        Thread.Sleep(2000);
+    }
 }
 
 
-static void SimulateHalf(Random rng, int HALF_LENGTH, ref int[] score, int halfNumber, double homeTeamAbility, double awayTeamAbility)
+static void SimulateHalf(Random rng, int HALF_LENGTH, ref int[] score, int halfNumber, string homeTeam, double homeTeamAbility, string awayTeam, double awayTeamAbility)
 {
     double ballPosition = 50;
     int addedTime = 0;
@@ -33,31 +38,34 @@ static void SimulateHalf(Random rng, int HALF_LENGTH, ref int[] score, int halfN
     for (int minute = 1; minute <= HALF_LENGTH; minute++)
     {
         int currentMinute = minute + (halfNumber * HALF_LENGTH) + addedTime;
-        SimulateMinute(rng, ref score, ref ballPosition, currentMinute, homeTeamAbility, awayTeamAbility);
-        SimulateRandomEvents(rng, ref score, ref homeTeamAbility, ref awayTeamAbility, currentMinute);
+        SimulateMinute(rng, ref score, ref ballPosition, currentMinute, homeTeam, homeTeamAbility, awayTeam, awayTeamAbility);
+        SimulateRandomEvents(rng, ref score, homeTeam, ref homeTeamAbility, awayTeam, ref awayTeamAbility, currentMinute);
         
         if (minute == 45 & addedTime == 0)
         {
             addedTime = GetAddedTime(rng, score);     
-            Console.WriteLine($"- {addedTime}' Added."); 
             minute -= addedTime;
         }
+
+        Thread.Sleep(100);
     }
 }
 
 
-static void SimulateMinute(Random rng, ref int[] score, ref double ballPosition, int minute, double homeTeamAbility, double awayTeamAbility)
+static void SimulateMinute(Random rng, ref int[] score, ref double ballPosition, int minute, string homeTeam, double homeTeamAbility, string awayTeam, double awayTeamAbility)
 {
     ballPosition += SimulateBallMovement(rng, homeTeamAbility, awayTeamAbility);
 
-    if (ballPosition > 100)
+    if (ballPosition < 0 || ballPosition > 100)
     {
-        Console.WriteLine($"- {minute}' Home Goal ({++score[0]} - {score[1]}).");
-        ballPosition = 50;
-    }
-    else if (ballPosition < 0)
-    {
-        Console.WriteLine($"- {minute}' Away Goal ({score[0]} - {++score[1]}).");
+        if (ballPosition > 100)
+        {
+            Console.WriteLine($"| GOAL | {homeTeam.ToUpper()} {++score[0]}-{score[1]} {awayTeam} ({minute}')");
+        }
+        else if (ballPosition < 0)
+        {
+            Console.WriteLine($"| GOAL | {homeTeam} {score[0]}-{++score[1]} {awayTeam.ToUpper()} ({minute}')");
+        }
         ballPosition = 50;
     }
 }
@@ -85,68 +93,116 @@ static int GetAddedTime(Random rng, int[] score)
 }
 
 
-static void SimulateRandomEvents(Random rng, ref int[] score, ref double homeTeamAbility, ref double awayTeamAbility, int minute)
+static void SimulateRandomEvents(Random rng, ref int[] score, string homeTeam, ref double homeTeamAbility, string awayTeam, ref double awayTeamAbility, int minute)
 {
     int eventNumber = rng.Next(1,2001);
 
-    if (eventNumber == 1) // Home team red card.
+    if (eventNumber == 1 || eventNumber == 2)
     {
-        Console.WriteLine($"- {minute}' Home Team Red Card ({score[0]} - {score[1]}).");
-        homeTeamAbility *= 0.91;
-        return;
-    }
-    else if (eventNumber == 2) // Away team red card.
-    {
-        Console.WriteLine($"- {minute}' Away Team Red Card ({score[0]} - {score[1]}).");
-        awayTeamAbility *= 0.91;
-        return;
+        if (eventNumber == 1) // Home team red card.
+        {
+            Console.WriteLine($"| RED  | {homeTeam.ToUpper()} {score[0]}-{score[1]} {awayTeam} ({minute}')");
+            homeTeamAbility *= 0.91;
+            return;
+        }
+        else if (eventNumber == 2) // Away team red card.
+        {
+            Console.WriteLine($"| RED  | {homeTeam} {score[0]}-{score[1]} {awayTeam.ToUpper()} ({minute}')");
+            awayTeamAbility *= 0.91;
+            return;
+        }
     }
 
     else if (eventNumber <= 4) // Home team injury.
     {
-        Console.WriteLine($"- {minute}' Home Team Injury ({score[0]} - {score[1]}).");
         homeTeamAbility *= 0.95;
         return;
     }
     else if (eventNumber <= 6) // Away team injury.
     {
-        Console.WriteLine($"- {minute}' Away Team Injury ({score[0]} - {score[1]}).");
         awayTeamAbility *= 0.95;
         return;
     }
 
     else if (eventNumber <= 8) // Home team penalty.
     {
-        Console.WriteLine($"- {minute}' Home Team Penalty...");
         if (eventNumber == 7)
         {
-            Console.WriteLine($"- {minute}' Scored! ({++score[0]} - {score[1]}).");
-        }
-        else
-        {
-            Console.WriteLine($"- {minute}' Missed. ({score[0]} - {score[1]}).");
+            Console.WriteLine($"| GOAL | {homeTeam.ToUpper()} {++score[0]}-{score[1]} {awayTeam} ({minute}' pen)");
         }
         return;
     }
     else if (eventNumber <= 10) // Away team penalty.
     {
-        Console.WriteLine($"- {minute}' Away Team Penalty...");
         if (eventNumber == 9)
         {
-            Console.WriteLine($"- {minute}' Scored! ({score[0]} - {++score[1]}).");
-        }
-        else
-        {
-            Console.WriteLine($"- {minute}' Missed. ({score[0]} - {score[1]}).");
+            Console.WriteLine($"| GOAL | {homeTeam} {score[0]}-{++score[1]} {awayTeam.ToUpper()} ({minute}' pen)");
         }
         return;
     }
 }
 
-int numberOfMatches = 10;
-
-for (int i = 0; i < numberOfMatches; i++)
+Dictionary<string, double> teamAbilities = new Dictionary<string, double>()
 {
-    int[] score = SimulateMatch(rng, HALF_LENGTH, NUMBER_OF_HALVES, homeTeamAbility, awayTeamAbility);
-    Console.WriteLine("\n\n");
+    {"Bournemouth", 79},
+    {"Arsenal", 90},
+    {"Aston Villa", 82},
+    {"Brentford", 78},
+    {"Brighton", 81},
+    {"Burnley", 74},
+    {"Chelsea", 85},
+    {"Crystal Palace", 79},
+    {"Everton", 78},
+    {"Fulham", 79},
+    {"Leeds", 76},
+    {"Liverpool", 91},
+    {"Manchester City", 91},
+    {"Manchester Utd.", 84},
+    {"Newcastle", 84},
+    {"Nott. Forest", 80},
+    {"Sunderland", 76},
+    {"Spurs", 83},
+    {"West Ham", 78},
+    {"Wolves", 76}
+};
+
+List<string[]> matches = new List<string[]>()
+{
+    new string[] {"Brighton", "Manchester Utd."},
+    new string[] {"Burnley", "Wolves"},
+    new string[] {"Crystal Palace", "Arsenal"},
+    new string[] {"Fulham", "Newcastle"},
+    new string[] {"Liverpool", "Brentford"},
+    new string[] {"Manchester City", "Aston Villa"},
+    new string[] {"Nott. Forest", "Bournemouth"},
+    new string[] {"Sunderland", "Chelsea"},
+    new string[] {"Spurs", "Everton"},
+    new string[] {"West Ham", "Leeds"}
+};
+
+Thread[] matchThreads = new Thread[10];
+
+for (int i = 0; i < 10; i++)
+{
+    string homeTeam = matches[i][0];
+    double homeTeamAbility = 0;
+    string awayTeam = matches[i][1];
+    double awayTeamAbility = 0;
+
+    try
+    {
+        homeTeamAbility = teamAbilities[homeTeam];
+        awayTeamAbility = teamAbilities[awayTeam];
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.Message);
+    }
+
+    matchThreads[i] = new Thread(() => SimulateMatch(rng, HALF_LENGTH, NUMBER_OF_HALVES, homeTeam, homeTeamAbility, awayTeam, awayTeamAbility));
+}
+
+foreach (Thread match in matchThreads)
+{
+    match.Start();
 }
