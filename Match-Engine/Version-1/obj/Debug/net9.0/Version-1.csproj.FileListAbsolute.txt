@@ -1,0 +1,15 @@
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\bin\Debug\net9.0\Version-1.exe
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\bin\Debug\net9.0\Version-1.deps.json
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\bin\Debug\net9.0\Version-1.runtimeconfig.json
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\bin\Debug\net9.0\Version-1.dll
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\bin\Debug\net9.0\Version-1.pdb
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\obj\Debug\net9.0\Version-1.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\obj\Debug\net9.0\Version-1.AssemblyInfoInputs.cache
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\obj\Debug\net9.0\Version-1.AssemblyInfo.cs
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\obj\Debug\net9.0\Version-1.csproj.CoreCompileInputs.cache
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\obj\Debug\net9.0\Version-1.sourcelink.json
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\obj\Debug\net9.0\Version-1.dll
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\obj\Debug\net9.0\refint\Version-1.dll
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\obj\Debug\net9.0\Version-1.pdb
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\obj\Debug\net9.0\Version-1.genruntimeconfig.cache
+C:\Users\asus\Documents\GitHub\Football-Simulator\Match-Engine\Version-1\obj\Debug\net9.0\ref\Version-1.dll
