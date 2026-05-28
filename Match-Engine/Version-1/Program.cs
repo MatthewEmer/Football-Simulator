@@ -3,28 +3,29 @@
 const int HALF_LENGTH = 45;
 const int NUMBER_OF_HALVES = 2;
 
-int homeTeamAbility = 75;
-int awayTeamAbility = 75;
+double homeTeamAbility = 100;
+double awayTeamAbility = 100;
 
 
-static int[] SimulateMatch(Random rng, int HALF_LENGTH, int NUMBER_OF_HALVES, int homeTeamAbility, int awayTeamAbility)
+static int[] SimulateMatch(Random rng, int HALF_LENGTH, int NUMBER_OF_HALVES, double homeTeamAbility, double awayTeamAbility)
 {
-    string[] startTexts = {"Kick Off", "Second Half Kick Off"};
-    string[] endTexts = {"Half-Time", "Full-Time"};
     int[] score = {0,0};
+
+    string[] startTexts = {"Kick Off", "Second Half Kick Off"};
+    string[] endTexts = {$"Half-Time", $"Full-Time"};
 
     for (int halfNumber = 0; halfNumber < NUMBER_OF_HALVES; halfNumber++)
     {
         Console.WriteLine(startTexts[halfNumber]);
         SimulateHalf(rng, HALF_LENGTH, ref score, halfNumber, homeTeamAbility, awayTeamAbility);
-        Console.WriteLine(endTexts[halfNumber]);
+        Console.WriteLine($"{endTexts[halfNumber]} ({score[0]} - {score[1]}).");
     }
 
     return score;
 }
 
 
-static void SimulateHalf(Random rng, int HALF_LENGTH, ref int[] score, int halfNumber, int homeTeamAbility, int awayTeamAbility)
+static void SimulateHalf(Random rng, int HALF_LENGTH, ref int[] score, int halfNumber, double homeTeamAbility, double awayTeamAbility)
 {
     double ballPosition = 50;
     int addedTime = 0;
@@ -33,18 +34,19 @@ static void SimulateHalf(Random rng, int HALF_LENGTH, ref int[] score, int halfN
     {
         int currentMinute = minute + (halfNumber * HALF_LENGTH) + addedTime;
         SimulateMinute(rng, ref score, ref ballPosition, currentMinute, homeTeamAbility, awayTeamAbility);
+        SimulateRandomEvents(rng, ref score, ref homeTeamAbility, ref awayTeamAbility, currentMinute);
         
         if (minute == 45 & addedTime == 0)
         {
             addedTime = GetAddedTime(rng, score);     
-            Console.WriteLine($"- {addedTime}' Added ({score[0]} - {score[1]})."); 
+            Console.WriteLine($"- {addedTime}' Added."); 
             minute -= addedTime;
         }
     }
 }
 
 
-static void SimulateMinute(Random rng, ref int[] score, ref double ballPosition, int minute, int homeTeamAbility, int awayTeamAbility)
+static void SimulateMinute(Random rng, ref int[] score, ref double ballPosition, int minute, double homeTeamAbility, double awayTeamAbility)
 {
     ballPosition += SimulateBallMovement(rng, homeTeamAbility, awayTeamAbility);
 
@@ -61,9 +63,9 @@ static void SimulateMinute(Random rng, ref int[] score, ref double ballPosition,
 }
 
 
-static double SimulateBallMovement(Random rng, int homeTeamAbility, int awayTeamAbility)
+static double SimulateBallMovement(Random rng, double homeTeamAbility, double awayTeamAbility)
 {
-    double direction = rng.Next(1, homeTeamAbility + awayTeamAbility);
+    double direction = rng.Next(1, (int)(homeTeamAbility + awayTeamAbility));
     double distance = rng.NextDouble() * 19;
 
     if (direction > homeTeamAbility) 
@@ -83,22 +85,68 @@ static int GetAddedTime(Random rng, int[] score)
 }
 
 
-int totalGoals = 0;
-int maxGoals = 0;
-int[] maxScore = {0,0};
-int nillNills = 0;
+static void SimulateRandomEvents(Random rng, ref int[] score, ref double homeTeamAbility, ref double awayTeamAbility, int minute)
+{
+    int eventNumber = rng.Next(1,2001);
 
-int numberOfMatches = 10_000;
+    if (eventNumber == 1) // Home team red card.
+    {
+        Console.WriteLine($"- {minute}' Home Team Red Card ({score[0]} - {score[1]}).");
+        homeTeamAbility *= 0.91;
+        return;
+    }
+    else if (eventNumber == 2) // Away team red card.
+    {
+        Console.WriteLine($"- {minute}' Away Team Red Card ({score[0]} - {score[1]}).");
+        awayTeamAbility *= 0.91;
+        return;
+    }
+
+    else if (eventNumber <= 4) // Home team injury.
+    {
+        Console.WriteLine($"- {minute}' Home Team Injury ({score[0]} - {score[1]}).");
+        homeTeamAbility *= 0.95;
+        return;
+    }
+    else if (eventNumber <= 6) // Away team injury.
+    {
+        Console.WriteLine($"- {minute}' Away Team Injury ({score[0]} - {score[1]}).");
+        awayTeamAbility *= 0.95;
+        return;
+    }
+
+    else if (eventNumber <= 8) // Home team penalty.
+    {
+        Console.WriteLine($"- {minute}' Home Team Penalty...");
+        if (eventNumber == 7)
+        {
+            Console.WriteLine($"- {minute}' Scored! ({++score[0]} - {score[1]}).");
+        }
+        else
+        {
+            Console.WriteLine($"- {minute}' Missed. ({score[0]} - {score[1]}).");
+        }
+        return;
+    }
+    else if (eventNumber <= 10) // Away team penalty.
+    {
+        Console.WriteLine($"- {minute}' Away Team Penalty...");
+        if (eventNumber == 9)
+        {
+            Console.WriteLine($"- {minute}' Scored! ({score[0]} - {++score[1]}).");
+        }
+        else
+        {
+            Console.WriteLine($"- {minute}' Missed. ({score[0]} - {score[1]}).");
+        }
+        return;
+    }
+}
+
+int numberOfMatches = 10;
 
 for (int i = 0; i < numberOfMatches; i++)
 {
     int[] score = SimulateMatch(rng, HALF_LENGTH, NUMBER_OF_HALVES, homeTeamAbility, awayTeamAbility);
-    Console.WriteLine($"\nHome {score[0]} - {score[1]} Away");
-    
-    int scoreTotal = score[0] + score[1];
-    if (scoreTotal == 0) { nillNills++; }
-    else if (scoreTotal > maxGoals) { maxGoals = scoreTotal; maxScore = score; }
-    totalGoals += scoreTotal;
+    Console.WriteLine("\n\n");
 }
-Console.WriteLine($"\n\n{totalGoals} goals from {numberOfMatches} matches ({Math.Round(totalGoals / (double)numberOfMatches, 2)} gp90).");
-Console.WriteLine($"{nillNills} 0-0s ({Math.Round(nillNills / (double)numberOfMatches, 2)}%), ({maxScore[0]} - {maxScore[1]}) was the highest scoring game.");
